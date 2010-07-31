@@ -71,6 +71,9 @@ class MobileProfilePlugin extends WAP20Plugin
             $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'])) {
 
             $this->serveMobile = true;
+        } else if (isset($_COOKIE['MobileOverride'])) {
+            // Cookie override is controlled by link at bottom.
+            $this->serveMobile = (bool)$_COOKIE['MobileOverride'];
         } else {
             // If they like the WAP 2.0 mimetype, serve them MP
             // @fixme $type is undefined, making this if case useless and spewing errors.
@@ -366,7 +369,7 @@ class MobileProfilePlugin extends WAP20Plugin
         }
 
         if (common_config('attachments', 'uploads')) {
-            if ($this->mobileFeatures['inputfiletype']) {
+            if (!empty($this->mobileFeatures['inputfiletype'])) {
                 $form->out->element('label', array('for' => 'notice_data-attach'), _('Attach'));
                 $form->out->element('input', array('id' => 'notice_data-attach',
                                                    'type' => 'file',
@@ -392,9 +395,40 @@ class MobileProfilePlugin extends WAP20Plugin
     }
 
 
-    function onStartShowScripts($action)
+    function onEndShowScripts($action)
     {
+        $action->inlineScript('
+            $(function() {
+                $("#mobile-toggle-disable").click(function() {
+                    $.cookie("MobileOverride", "0", {path: "/"});
+                    window.location.reload();
+                    return false;
+                });
+                $("#mobile-toggle-enable").click(function() {
+                    $.cookie("MobileOverride", "1", {path: "/"});
+                    window.location.reload();
+                    return false;
+                });
+            });'
+        );
+    }
 
+
+    function onEndShowInsideFooter($action)
+    {
+        if ($this->serveMobile) {
+            // TRANS: Link to switch site layout from mobile to desktop mode. Appears at very bottom of page.
+            $linkText = _m('Switch to desktop site layout.');
+            $key = 'mobile-toggle-disable';
+        } else {
+            // TRANS: Link to switch site layout from desktop to mobile mode. Appears at very bottom of page.
+            $linkText = _m('Switch to mobile site layout.');
+            $key = 'mobile-toggle-enable';
+        }
+        $action->elementStart('p');
+        $action->element('a', array('href' => '#', 'id' => $key), $linkText);
+        $action->elementEnd('p');
+        return true;
     }
 
 
