@@ -52,24 +52,30 @@ class AddFeedMirrorForm extends Form
 
     function formData()
     {
-        $this->out->input($this->id() . '-url',
+        $this->out->elementStart('ul');
+        $this->li();
+        $this->doInput($this->id() . '-url', 'url',
             _m('Feed URL'),
             '',
             _m('Feed or web page containing feed'));
-        $this->out->element('p', false, 'data');
+        $this->unli();
+        $this->out->elementEnd('ul');
     }
 
-    /**
-     * HTTP method used to submit the form
-     *
-     * Defaults to post. Subclasses can override if they need to.
-     *
-     * @return string the method to use for submitting
-     */
-     function method()
-     {
-         return 'post';
-     }
+    private function doInput($id, $name, $label, $value=null, $instructions=null)
+    {
+        $this->out->element('label', array('for' => $id), $label);
+        $attrs = array('name' => $name,
+                       'type' => 'text',
+                       'id' => $id);
+        if ($value) {
+            $attrs['value'] = $value;
+        }
+        $this->out->element('input', $attrs);
+        if ($instructions) {
+            $this->out->element('p', 'form_guide', $instructions);
+        }
+    }
 
     /**
      * Buttons for form actions
@@ -110,7 +116,7 @@ class AddFeedMirrorForm extends Form
 
     function action()
     {
-        return common_local_url('editfeedmirror');
+        return common_local_url('addfeedmirror');
     }
 
     /**
@@ -124,13 +130,4 @@ class AddFeedMirrorForm extends Form
         return 'form';
     }
 
-    function li()
-    {
-        $this->out->elementStart('li');
-    }
-
-    function unli()
-    {
-        $this->out->elementEnd('li');
-    }
 }

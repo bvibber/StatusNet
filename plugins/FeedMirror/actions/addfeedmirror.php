@@ -65,7 +65,7 @@ class AddFeedMirrorAction extends Action
         $ok = $this->sharedBoilerplate();
         if ($ok) {
             // and now do something useful!
-            $this->feedurl = $this->validateFeedUrl($this->trim('feedurl'));
+            $this->feedurl = $this->validateFeedUrl($this->trimmed('url'));
             return true;
         } else {
             return $ok;
@@ -74,17 +74,19 @@ class AddFeedMirrorAction extends Action
 
     function validateFeedUrl($url)
     {
-        if (!common_validate_url($url)) {
+        common_log(LOG_DEBUG, __METHOD__ . ': ' . $url);
+        if (!common_valid_http_url($url)) {
             // TRANS: Error when user has given an invalid feed URL
             // attempting to set up feed mirroring.
             $this->clientError(_m("Invalid URL."));
         }
 
         try {
-            $discover = FeedDiscovery::discoverFromURL($url);
+            $discover = new FeedDiscovery();
+            return $discover->discoverFromURL($url);
         } catch (FeedSubNoFeedException $e) {
             // TRANS: Error message returned to user when setting up feed mirroring, but we've been given an HTML page without autodiscoverable links.
-            $this->clientError(_m("Could not find an RSS or Atom feed on the page. If there's a feed link, try copy-pasting it directly here.");
+            $this->clientError(_m("Could not find an RSS or Atom feed on the page. If there's a feed link, try copy-pasting it directly here."));
         } catch (Exception $e) {
             common_log(LOG_ERROR, __METHOD__ . ": " .
                 "error in feed discovery for " .
@@ -96,7 +98,6 @@ class AddFeedMirrorAction extends Action
             // TRANS: Error message returned to user when setting up feed mirroring, but we were unable to resolve the given URL to a working feed.
             $this->clientError(_m("Could not reach the feed; the server may be down or the URL may be misspelled."));
         }
-        
     }
 
     /**
@@ -171,13 +172,12 @@ class AddFeedMirrorAction extends Action
         
         // Make sure the feed is subscribed...
         if (!$sub->subscribe()) {
+            $this->serverError(_m("Could not subscribe to feed."));
         }
 
         $mirror = new FeedMirror();
         $mirror->profile_id = $this->user->id;
         $mirror->url = $this->feedurl;
         $mirror->insert();
-
-
     }
 }

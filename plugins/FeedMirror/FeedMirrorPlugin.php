@@ -36,10 +36,10 @@ class FeedMirrorPlugin extends Plugin
     function onRouterInitialized($m)
     {
         $m->connect('settings/feeds',
-                    array('action' => 'feedsettings'),
-                    'settings/feeds/add',
-                    array('action' => 'addfeedmirror'),
-                    'settings/feeds/edit',
+                    array('action' => 'feedsettings'));
+        $m->connect('settings/feeds/add',
+                    array('action' => 'addfeedmirror'));
+        $m->connect('settings/feeds/edit',
                     array('action' => 'editfeedmirror'));
         return true;
     }
